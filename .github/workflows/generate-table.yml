@@ -2,35 +2,47 @@ name: Generate 6-bit DAC Table
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:     # allows you to run it “manually” from the Actions tab
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: 1) Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+    - name: 2) List workspace for debugging
+      run: |
+        echo "Working directory: $(pwd)"
+        echo "Contents:"
+        ls -R .
 
-      - name: Install dependencies
-        # If you have none, you can omit this step or leave requirements.txt empty
-        run: |
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
+    - name: 3) Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      - name: Run table generator
-        run: python generate_dac_table.py
+    - name: 4) Install reqs (if any)
+      run: |
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
 
-      - name: Commit generated Markdown
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "chore: update DAC6bit_Table.md"
-          file_pattern: "DAC6bit_Table.md"
+    - name: 5) Run table generator
+      run: |
+        echo "Running generate_dac_table.py"
+        python3 generate_dac_table.py
+        echo "Exit code: $?"
+
+    - name: 6) List workspace AFTER script
+      run: |
+        echo "After generation, contents:"
+        ls -R .
+
+    - name: 7) Commit DAC6bit_Table.md (if changed)
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "chore: update DAC6bit_Table.md"
+        file_pattern: "DAC6bit_Table.md"
